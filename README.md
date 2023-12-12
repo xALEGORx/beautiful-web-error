@@ -18,8 +18,8 @@ import (
 )
 
 var berror bwError.BeautifulError = bwError.BeautifulError{
-	Page:          true, // required, is the HTML page display enabled
-	Theme:         "xcode-dark", // theme for highlighter code, default xcode-dark
+	Page:          true,            // required, is the HTML page display enabled
+	Theme:         "xcode-dark",    // theme for highlighter code, default xcode-dark
 	IgnoredErrors: []error{io.EOF}, // ignoring errors for debugging, default empty
 }
 
@@ -37,4 +37,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
     return
   }
 }
+```
+
+## Disable HTML
+When releasing to production, so that the HTML debugging page is not displayed. You can set the Page: false parameter. 
+Then the error output will be as follows:
+```
+{"error":"failed request"}
 ```
