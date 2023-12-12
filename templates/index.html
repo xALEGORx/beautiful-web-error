@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beautiful Error Page</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/github-syntax-dark@latest/lib/github-dark.css" />
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <p class="title">Beautiful Error by <a href="https://github.com/xALEGORx/beautiful-web-error">ALEGOR</a></p>
+            <h1>{{.ErrorMessage}}</h1>
+            <span class="separator"></span>
+            <div class="header-columns">
+                <div class="column">
+                    <h2>Request:</h2>
+                    <div><span class="key">URL:</span> <span class="value">{{.RequestData.URL}}</span></div>
+                    <div><span class="key">Host:</span> <span class="value">{{.RequestData.Host}}</span></div>
+                    <div><span class="key">Proto:</span> <span class="value">{{.RequestData.Proto}}</span></div>
+                    <div><span class="key">Client Address:</span> <span class="value">{{.RequestData.RemoteAddr}}</span>
+                    </div>
+                    <div><span class="key">Method:</span> <span class="span-border value">{{.RequestData.Method}}</span>
+                    </div>
+                </div>
+                <div class="column">
+                    <h2>GET Parametrs:</h2>
+                    <ul>
+                        {{ range $key, $values := .RequestData.FormData }}
+                        <li>
+                            <span class="key">{{ $key }}</span> — <span class="value">{{ $values }}</span>
+                        </li>
+                        {{ end }}
+                    </ul>
+                </div>
+                <div class="column">
+                    <h2>POST Parameters:</h2>
+                    <ul>
+                        {{ range $key, $values := .RequestData.PostFormData }}
+                        <li>
+                            <span class="key">{{ $key }}</span> — <span class="value">{{ $values }}</span>
+                        </li>
+                        {{ end }}
+                    </ul>
+                </div>
+                <div class="column">
+                    <h2>Headers:</h2>
+                    <ul>
+                        {{ range $key, $values := .RequestData.Headers }}
+                        <li>
+                            <span class="key">{{ $key }}</span> — <span class="value">{{ $values }}</span>
+                        </li>
+                        {{ end }}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="traceback">
+            <div class="sidebar">
+                <h1>Traceback</h1>
+                {{ range $index, $stack := .StackTrace }}
+                <div class="file {{if eq $index 0}} selected {{end}}" id="file-{{ $index }}"
+                    onclick="toggleCode('code-{{ $index }}')">
+                    {{$stack.FileName}}:{{$stack.LineNumber}} — {{$stack.Function}}
+                </div>
+                {{ end }}
+            </div>
+            <div class="code-container">
+                {{ range $index, $stack := .StackTrace }}
+                <div id="code-{{ $index }}" style="display: {{if eq $index 0}} block {{ else }} none {{end}}">
+                    {{$stack.Code}}
+                </div>
+                {{ end }}
+            </div>
+        </div>
+    </div>
+</body>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        color: #f0f0f0;
+        font-family: 'Roboto', sans-serif;
+    }
+
+    body {
+        background-color: #1d1c1c;
+    }
+
+    .title {
+        color: #696969;
+    }
+
+    .title a {
+        color: #696969;
+        text-decoration: none;
+    }
+
+    .span-border {
+        border: 2px solid #d85d5d;
+        padding: 1px;
+        border-radius: 5px;
+    }
+
+    .span-type {
+        border: 2px solid #d85d5d;
+        padding: 1px;
+        border-radius: 5px;
+        color: #d85d5d;
+    }
+
+    .separator {
+        display: block;
+        height: 1px;
+        border: 0;
+        border-top: 1px solid #502d2d;
+        padding: 0;
+        margin: 10px 0;
+    }
+
+    .container {
+        width: 90%;
+        margin: 0 auto;
+        margin-top: 80px;
+    }
+
+    .header {
+        background-color: #202020;
+        border-radius: 5px;
+        padding: 20px 50px;
+    }
+
+    .traceback {
+        margin-top: 20px;
+        background-color: #202020;
+        border-radius: 5px;
+        padding: 50px;
+        display: flex;
+        height: 380px;
+    }
+
+    .sidebar {
+        border-right: #502d2d solid 1px;
+        width: 30%;
+    }
+
+    .file {
+        height: 50px;
+        line-height: 50px;
+        border-bottom: #502d2d solid 1px;
+        padding-left: 10px;
+    }
+
+    .selected {
+        background-color: #502d2d;
+    }
+
+    .code-container {
+        background-color: #282c34;
+        border-top-right-radius: 5px;
+        border-bottom-right-radius: 5px;
+        width: 70%;
+        height: 100%;
+    }
+
+    pre {
+        padding: 25px;
+        height: 100%;
+    }
+
+    .header-columns {
+        display: flex;
+        height: 200px;
+    }
+
+    .column {
+        width: 25%;
+        max-height: 300px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        border-right: 1px solid #502d2d;
+        padding: 0 20px;
+    }
+
+    .key {
+        color: #b6b6b6;
+    }
+
+    .value {
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    ul {
+        list-style-type: none;
+    }
+</style>
+
+<script>
+    function toggleCode(codeId) {
+        var fileBlocks = document.querySelectorAll('[id^="file-"]');
+        fileBlocks.forEach(function (block) {
+            block.classList.remove('selected');
+        });
+
+        var clickedFileBlock = document.getElementById(codeId.replace('code-', 'file-'));
+        clickedFileBlock.classList.add('selected');
+
+        var codeBlocks = document.querySelectorAll('[id^="code-"]');
+        codeBlocks.forEach(function (block) {
+            block.style.display = 'none';
+        });
+
+        var clickedCodeBlock = document.getElementById(codeId);
+        clickedCodeBlock.style.display = 'block';
+    }
+</script>
+
+</html>
