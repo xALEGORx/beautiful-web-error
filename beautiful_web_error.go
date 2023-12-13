@@ -17,13 +17,14 @@ import (
 	"github.com/alecthomas/chroma/styles"
 )
 
+// the structure for initializing the library
 type BeautifulError struct {
 	Page          bool    // is the HTML page display enabled
 	Theme         string  // theme for highlighter code
 	IgnoredErrors []error // ignoring errors for debugging
 }
 
-// init method
+// initialization method for parsing the template and loading the theme
 func (b *BeautifulError) Init() error {
 	var err error
 
@@ -39,7 +40,8 @@ func (b *BeautifulError) Init() error {
 	return nil
 }
 
-// method for handle error
+// the main method of the library that handles errors.
+// If the transmitted error is not in the IgnoredErrors array, the render method will be called
 func (b BeautifulError) Catch(err error, w http.ResponseWriter, r *http.Request) bool {
 	if err == nil {
 		return false
@@ -58,11 +60,15 @@ func (b BeautifulError) Catch(err error, w http.ResponseWriter, r *http.Request)
 
 ///////////////////////////////////////////////////
 
+// uploading a template via the embed library
+//
 //go:embed templates/index.html
 var content embed.FS
 
+// an instance of the template to be used for HTML rendering
 var errorTemplate *template.Template
 
+// a structure for displaying information about a specific file on the stack
 type stackFrame struct {
 	FullPath   string
 	FileName   string
@@ -71,6 +77,7 @@ type stackFrame struct {
 	Code       template.HTML
 }
 
+// a structure for displaying information about a request from http.Request
 type requestData struct {
 	Method       string
 	Host         string
@@ -83,15 +90,17 @@ type requestData struct {
 	Headers      map[string]string
 }
 
+// structure for error output if Page (HTML render) is disabled
 type errorResponse struct {
 	Error string `json:"error"`
 }
 
-// Main method for render page with debug
+// the main method for rendering a page with debugging
 func (b BeautifulError) render(err error, w http.ResponseWriter, r *http.Request) {
 	if !b.Page {
 		// if disabled page render, render json message
 		w.Header().Set("Content-Type", "application/json")
+
 		json.NewEncoder(w).Encode(errorResponse{
 			Error: err.Error(),
 		})
@@ -118,11 +127,11 @@ func (b BeautifulError) render(err error, w http.ResponseWriter, r *http.Request
 	}
 }
 
-// Utils methods
+// getting complete information about all files in the stack
 func (b BeautifulError) getStackTrace() []stackFrame {
 	pc := make([]uintptr, 20)
 	n := runtime.Callers(2, pc)
-	frames := runtime.CallersFrames(pc[2:n]) // 2: - for disable for render called method
+	frames := runtime.CallersFrames(pc[2:n]) // we use shift 2: to disable the output of the library's working methods
 
 	var stackTrace []stackFrame
 	for i := 0; i < 10; i++ {
@@ -146,6 +155,7 @@ func (b BeautifulError) getStackTrace() []stackFrame {
 	return stackTrace
 }
 
+// getting a code snippet from a stack file and highlighting a line
 func (b BeautifulError) readCodeLines(filename string, errorLine int) string {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -178,7 +188,7 @@ func (b BeautifulError) readCodeLines(filename string, errorLine int) string {
 	return code
 }
 
-// prepare request data to struct
+// preparing query data for struct
 func (b BeautifulError) formatRequestData(r *http.Request) requestData {
 	r.ParseForm()
 
@@ -203,7 +213,7 @@ func (b BeautifulError) formatRequestData(r *http.Request) requestData {
 	}
 }
 
-// function to highlight code (format string code to html code)
+// function to highlight code (formatting string code into html code)
 func (b BeautifulError) highlightCode(code string, errorLine int, startLine int) (string, error) {
 	var output bytes.Buffer
 
@@ -218,7 +228,8 @@ func (b BeautifulError) highlightCode(code string, errorLine int, startLine int)
 	formatter := html.New(
 		html.WithLineNumbers(true),
 		html.BaseLineNumber(startLine),
-		html.HighlightLines([][2]int{{errorLine, errorLine}}))
+		html.HighlightLines([][2]int{{errorLine, errorLine}}),
+	)
 
 	iterator, err := lexer.Tokenise(nil, code)
 	if err != nil {
