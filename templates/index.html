@@ -74,6 +74,7 @@
             <div class="code-container">
                 {{ range $index, $stack := .StackTrace }}
                 <div id="code-{{ $index }}" style="display: {{if eq $index 0}} block {{ else }} none {{end}}">
+                    <span class="code-filename">{{ $stack.FullPath }} : {{ $stack.LineNumber }} line — {{ $stack.Function }}</span>
                     {{$stack.Code}}
                 </div>
                 {{ end }}
@@ -168,10 +169,15 @@
         border-bottom-right-radius: 5px;
         width: 70%;
         height: 100%;
+        overflow: hidden;
+    }
+
+    .code-container .code-filename {
+        padding-left: 15px;
     }
 
     pre {
-        padding: 25px;
+        padding: 10px;
         height: 100%;
     }
 
